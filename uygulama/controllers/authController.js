@@ -13,7 +13,7 @@ const girisYap = async (req, res) => {
         }
 
         // 2. Yönergedeki "bcrypt doğrulaması" kuralı
-        const sifreDogruMu = await bcrypt.compare(sifre, kullanici.sifre);
+        const sifreDogruMu = await bcrypt.compare(sifre, kullanici.sifre_hash);
 
         if (!sifreDogruMu) {
             return res.status(401).json({ hata: "E-posta veya şifre hatalı." });
