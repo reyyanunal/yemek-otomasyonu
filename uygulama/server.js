@@ -2,9 +2,19 @@ const express = require('express');
 const app = express();
 const port = 8000;
 
+// Gelen JSON formatındaki verileri (eposta, sifre) okuyabilmek için şart!
+app.use(express.json());
+
+// Yazdığımız route dosyasını içeri aktarıyoruz
+const authRoutes = require('./routes/authRoutes');
+
+// Test endpoint'imiz aynen kalsın
 app.get('/api/test', (req, res) => {
   res.json({ mesaj: "Harika! Uygulama servisi ayakta ve basariyla calisiyor." });
 });
+
+// /api ile başlayan tüm istekleri (örneğin /api/giris) authRoutes'a yönlendiriyoruz
+app.use('/api', authRoutes);
 
 app.listen(port, () => {
   console.log(`Uygulama ${port} portunda basladi`);
