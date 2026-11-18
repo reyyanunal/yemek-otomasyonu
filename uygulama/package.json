@@ -1,0 +1,16 @@
+{
+  "name": "yemekhane-api",
+  "version": "1.0.0",
+  "description": "Yemekhane Otomasyonu Web API",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "mysql2": "^3.9.0",
+    "redis": "^4.6.13",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5"
+  }
+}
