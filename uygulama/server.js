@@ -19,3 +19,9 @@ app.use('/api', authRoutes);
 app.listen(port, () => {
   console.log(`Uygulama ${port} portunda basladi`);
 });
+
+// İçeri aktar:
+const menuRoutes = require('./routes/menuRoutes');
+
+// Rotaları kullan (app.use('/api', authRoutes); satırının hemen altına ekle):
+app.use('/api/menuler', menuRoutes);
