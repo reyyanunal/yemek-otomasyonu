@@ -56,4 +56,52 @@ const gunlukMenuDetay = async (req, res) => {
     }
 };
 
-module.exports = { gunlukMenuDetay };
+const haftalikMenu = async (req, res) => {
+    const { tarih, rol } = req.query;
+
+    if (!tarih || !rol) {
+        return res.status(400).json({ hata: "Tarih ve kullanıcı rolü gereklidir." });
+    }
+
+    try {
+        const satirlar = await Menu.haftalikMenuGetir(tarih);
+        const suAn = new Date(); // Sistemin o anki saati
+
+        const haftalikListe = satirlar.map(satir => {
+            // İŞ KURALI 1: Rol bazlı fiyat belirleme (Arayüz düşünmez, API karar verir)
+            const gecerliFiyat = (rol === 'personel' || rol === 'yonetici') 
+                ? satir.personel_fiyati 
+                : satir.ogrenci_fiyati;
+
+            // İŞ KURALI 2: Son saat geçtiyse veya boş yer yoksa rezervasyon kapalıdır
+            const sureDoldu = suAn > new Date(satir.rezervasyon_son);
+            const yerYok = satir.bos_yer <= 0;
+            const butonPasifMi = sureDoldu || yerYok;
+
+            let pasifNedeni = null;
+            if (sureDoldu) pasifNedeni = "Süre doldu";
+            else if (yerYok) pasifNedeni = "Kontenjan dolu";
+
+            return {
+                menu_id: satir.menu_id,
+                tarih: satir.tarih.toISOString().split('T')[0], // Sadece YYYY-MM-DD
+                yemekhane: satir.yemekhane,
+                ogun: satir.ogun,
+                bos_yer: satir.bos_yer,
+                rezervasyon_son: satir.rezervasyon_son,
+                fiyat: gecerliFiyat, // Arayüze sadece tek bir 'fiyat' gidiyor
+                rezervasyon_acik: !butonPasifMi,
+                pasif_nedeni: pasifNedeni
+            };
+        });
+
+        res.json(haftalikListe);
+
+    } catch (error) {
+        console.error("Haftalık menü hatası:", error);
+        res.status(500).json({ hata: "Sunucu hatası oluştu." });
+    }
+};
+
+// EXPORT SATIRINI ŞU ŞEKİLDE GÜNCELLE:
+module.exports = { gunlukMenuDetay, haftalikMenu };
