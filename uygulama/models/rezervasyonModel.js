@@ -1,4 +1,4 @@
-const { dbRead } = require('../config/db');
+const { dbRead, dbWrite } = require('../config/db');
 
 const kullaniciRezervasyonlariniGetir = async (kullanici_id) => {
     const query = `
@@ -13,4 +13,15 @@ const kullaniciRezervasyonlariniGetir = async (kullanici_id) => {
     return rows;
 };
 
-module.exports = { kullaniciRezervasyonlariniGetir };
+const rezervasyonYap = async (kullanici_id, menu_id) => {
+    // KURAL: Yazma işlemi olduğu için dbWrite (Primary) kullanıyoruz!
+    const query = `CALL sp_rezervasyon_yap(?, ?)`;
+    const [rows] = await dbWrite.execute(query, [kullanici_id, menu_id]);
+
+    if (rows && rows[0] && rows[0].length > 0) {
+        return rows[0][0]; // Stored Procedure'den dönen: rezervasyon_id, ucret, bakiye
+    }
+    return null;
+};
+
+module.exports = { kullaniciRezervasyonlariniGetir, rezervasyonYap };

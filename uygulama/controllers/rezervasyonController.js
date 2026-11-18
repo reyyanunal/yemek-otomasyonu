@@ -31,4 +31,25 @@ const rezervasyonlarim = async (req, res) => {
     }
 };
 
-module.exports = { rezervasyonlarim };
+const yeniRezervasyon = async (req, res) => {
+    const { kullanici_id, menu_id } = req.body;
+
+    if (!kullanici_id || !menu_id) {
+        return res.status(400).json({ hata: "Kullanıcı ID ve Menü ID gereklidir." });
+    }
+
+    try {
+        const sonuc = await Rezervasyon.rezervasyonYap(kullanici_id, menu_id);
+        
+        res.status(201).json({
+            mesaj: "Rezervasyon başarıyla oluşturuldu.",
+            detay: sonuc
+        });
+    } catch (error) {
+        console.error("Rezervasyon yapma hatası:", error);
+        const hataMesaji = error.sqlMessage || "Rezervasyon işlemi başarısız oldu.";
+        res.status(400).json({ hata: hataMesaji });
+    }
+};
+
+module.exports = { rezervasyonlarim, yeniRezervasyon};
