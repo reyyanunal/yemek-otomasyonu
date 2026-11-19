@@ -31,3 +31,7 @@ const rezervasyonRoutes = require('./routes/rezervasyonRoutes');
 
 // Rotaları kullan (app.use('/api/menuler', ... satırının hemen altına ekle):
 app.use('/api/rezervasyonlar', rezervasyonRoutes);
+
+const bakiyeRoutes = require('./routes/bakiyeRoutes');
+// ...
+app.use('/api/bakiye', bakiyeRoutes);
