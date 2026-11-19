@@ -24,4 +24,15 @@ const rezervasyonYap = async (kullanici_id, menu_id) => {
     return null;
 };
 
-module.exports = { kullaniciRezervasyonlariniGetir, rezervasyonYap };
+const rezervasyonIptalEt = async (kullanici_id, rezervasyon_id) => {
+    // Yazma/iade işlemi olduğu için dbWrite (Primary) kullanıyoruz
+    const query = `CALL sp_rezervasyon_iptal(?, ?)`;
+    const [rows] = await dbWrite.execute(query, [kullanici_id, rezervasyon_id]);
+
+    if (rows && rows[0] && rows[0].length > 0) {
+        return rows[0][0]; // rezervasyon_id, iade, bakiye
+    }
+    return null;
+};
+
+module.exports = { kullaniciRezervasyonlariniGetir, rezervasyonYap, rezervasyonIptalEt};

@@ -52,4 +52,25 @@ const yeniRezervasyon = async (req, res) => {
     }
 };
 
-module.exports = { rezervasyonlarim, yeniRezervasyon};
+const rezervasyonIptal = async (req, res) => {
+    const { rezervasyon_id } = req.params;
+    const { kullanici_id } = req.body;
+
+    if (!kullanici_id || !rezervasyon_id) {
+        return res.status(400).json({ hata: "Kullanıcı ID ve Rezervasyon ID gereklidir." });
+    }
+
+    try {
+        const sonuc = await Rezervasyon.rezervasyonIptalEt(kullanici_id, rezervasyon_id);
+        res.json({
+            mesaj: "Rezervasyon başarıyla iptal edildi.",
+            detay: sonuc
+        });
+    } catch (error) {
+        console.error("Rezervasyon iptal hatası:", error);
+        const hataMesaji = error.sqlMessage || "Rezervasyon iptal edilemedi.";
+        res.status(400).json({ hata: hataMesaji });
+    }
+};
+
+module.exports = { rezervasyonlarim, yeniRezervasyon,rezervasyonIptal};

@@ -7,4 +7,7 @@ router.get('/kullanici/:kullanici_id', rezervasyonController.rezervasyonlarim);
 // POST /api/rezervasyonlar
 router.post('/', rezervasyonController.yeniRezervasyon);
 
+// PATCH /api/rezervasyonlar/368/iptal
+router.patch('/:rezervasyon_id/iptal', rezervasyonController.rezervasyonIptal);
+
 module.exports = router;
