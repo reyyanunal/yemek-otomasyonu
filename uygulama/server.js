@@ -35,3 +35,7 @@ app.use('/api/rezervasyonlar', rezervasyonRoutes);
 const bakiyeRoutes = require('./routes/bakiyeRoutes');
 // ...
 app.use('/api/bakiye', bakiyeRoutes);
+
+const degerlendirmeRoutes = require('./routes/degerlendirmeRoutes');
+// ...
+app.use('/api/degerlendirmeler', degerlendirmeRoutes);
