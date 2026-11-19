@@ -116,19 +116,20 @@ document.getElementById('gunluk-getir-btn').addEventListener('click', gunlukMenu
 // 3. HAFTALIK MENÜ VE REZERVASYON
 const haftalikMenuGetir = async () => {
     const alan = document.getElementById('haftalik-sonuc');
-    const res = await fetch('/api/menuler/haftalik');
+    const tarih = document.getElementById('gunluk-tarih').value || new Date().toISOString().slice(0, 10);
+    const res = await fetch(`/api/menuler/haftalik?tarih=${tarih}&rol=${aktifKullanici.rol}`);
     const data = await res.json();
     const liste = Array.isArray(data) ? data : (data.menuler || []);
 
     if (liste.length === 0) {
-        alan.innerHTML = '<div class="oge-kart">Haftalık menü bulunamadı.</div>';
+        alan.innerHTML = `<div class="oge-kart">${data.hata || 'Haftalık menü bulunamadı.'}</div>`;
         return;
     }
 
     alan.innerHTML = liste.map((m) => {
-        const fiyat = aktifKullanici.rol === 'ogrenci' ? m.ogrenci_fiyati : m.personel_fiyati;
+        const fiyat = m.fiyat ?? (aktifKullanici.rol === 'ogrenci' ? m.ogrenci_fiyati : m.personel_fiyati);
         const sonSaatGecti = m.rezervasyon_son ? new Date(m.rezervasyon_son) < new Date() : false;
-        const pasif = sonSaatGecti || Number(m.bos_yer) <= 0;
+        const pasif = m.pasif || sonSaatGecti || Number(m.bos_yer) <= 0;
         return `
             <div class="oge-kart">
                 <div class="oge-baslik">
@@ -170,11 +171,11 @@ const rezervasyonlariGetir = async () => {
     alan.innerHTML = liste.map((r) => `
         <div class="oge-kart">
             <div class="oge-baslik">
-                <span>Rez #${r.rezervasyon_id || r.id} (Menü #${r.menu_id})</span>
+                <span>Rez #${r.rezervasyon_id || r.id} - ${r.yemekhane || ''} (${r.ogun || ''})</span>
                 <span>Durum: ${r.durum}</span>
             </div>
             <div>Tarih: ${String(r.tarih || '').slice(0, 10)} | Ücret: ${r.ucret || '-'} TL</div>
-            ${r.durum === 'aktif' ? `<button class="btn-tehlike btn-kucuk" style="margin-top:8px" onclick="rezervasyonIptal(${r.rezervasyon_id || r.id})">İptal Et</button>` : ''}
+            ${r.iptal_edilebilir ? `<button class="btn-tehlike btn-kucuk" style="margin-top:8px" onclick="rezervasyonIptal(${r.rezervasyon_id || r.id})">İptal Et</button>` : ''}
         </div>
     `).join('') || '<div class="oge-kart">Rezervasyonunuz bulunmuyor.</div>';
 };
