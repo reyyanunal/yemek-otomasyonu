@@ -39,3 +39,7 @@ app.use('/api/bakiye', bakiyeRoutes);
 const degerlendirmeRoutes = require('./routes/degerlendirmeRoutes');
 // ...
 app.use('/api/degerlendirmeler', degerlendirmeRoutes);
+
+const yoneticiRoutes = require('./routes/yoneticiRoutes');
+// ...
+app.use('/api/yonetici', yoneticiRoutes);
