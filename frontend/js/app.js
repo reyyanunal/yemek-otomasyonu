@@ -1,4 +1,18 @@
 let aktifKullanici = JSON.parse(localStorage.getItem('kullanici') || 'null');
+let oturumToken = localStorage.getItem('oturumToken');
+
+const yetkiliFetch = (url, options = {}) => {
+    const headers = new Headers(options.headers || {});
+
+    if (oturumToken) {
+        headers.set('Authorization', `Bearer ${oturumToken}`);
+    }
+
+    return fetch(url, {
+        ...options,
+        headers
+    });
+};
 
 const bildirimGoster = (mesaj, tip = 'basari') => {
     const el = document.getElementById('bildirim');
@@ -50,17 +64,44 @@ document.getElementById('giris-form').addEventListener('submit', async (e) => {
     const data = await res.json();
     if (!res.ok) return bildirimGoster(data.hata || 'Giriş başarısız.', 'hata');
 
-    aktifKullanici = data.kullanici;
-    localStorage.setItem('kullanici', JSON.stringify(aktifKullanici));
-    bildirimGoster('Giriş başarılı.');
-    arayuzuHazirla();
+    
+aktifKullanici = data.kullanici;
+oturumToken = data.token;
+
+localStorage.setItem('kullanici', JSON.stringify(aktifKullanici));
+localStorage.setItem('oturumToken', oturumToken);
+
+bildirimGoster('Giriş başarılı.');
+arayuzuHazirla();
+
 });
 
-document.getElementById('cikis-btn').addEventListener('click', () => {
-    aktifKullanici = null;
-    localStorage.removeItem('kullanici');
-    arayuzuHazirla();
+
+document.getElementById('cikis-btn').addEventListener('click', async () => {
+    try {
+        const res = await yetkiliFetch('/api/cikis', {
+            method: 'POST'
+        });
+
+        if (!res.ok) {
+            console.error('Sunucuda çıkış işlemi başarısız:', res.status);
+            return bildirimGoster('Çıkış yapılamadı. Tekrar deneyin.', 'hata');
+        }
+
+        aktifKullanici = null;
+        oturumToken = null;
+
+        localStorage.removeItem('kullanici');
+        localStorage.removeItem('oturumToken');
+
+        bildirimGoster('Çıkış başarılı.');
+        arayuzuHazirla();
+    } catch (error) {
+        console.error('Çıkış işlemi hatası:', error);
+        bildirimGoster('Sunucuya ulaşılamadı.', 'hata');
+    }
 });
+
 
 // SEKME GEÇİŞLERİ
 document.querySelectorAll('.sekme-btn').forEach((btn) => {
@@ -125,7 +166,7 @@ const haftalikMenuGetir = async () => {
     const data = await res.json();
     const liste = Array.isArray(data) ? data : (data.menuler || []);
 
-    const rezervasyonRes = await fetch(`/api/rezervasyonlar/kullanici/${aktifKullanici.id}`);
+    const rezervasyonRes = await yetkiliFetch(`/api/rezervasyonlar/kullanici/${aktifKullanici.id}`);
     const rezervasyonlar = await rezervasyonRes.json();
 
     const rezerveMenuler = new Set(
@@ -163,7 +204,7 @@ const haftalikMenuGetir = async () => {
 document.getElementById('haftalik-yenile-btn').addEventListener('click', haftalikMenuGetir);
 
 window.rezervasyonYap = async (menu_id) => {
-    const res = await fetch('/api/rezervasyonlar', {
+    const res = await yetkiliFetch('/api/rezervasyonlar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ kullanici_id: aktifKullanici.id, menu_id })
@@ -179,7 +220,7 @@ window.rezervasyonYap = async (menu_id) => {
 // 4. REZERVASYONLARIM VE İPTAL
 const rezervasyonlariGetir = async () => {
     const alan = document.getElementById('rez-sonuc');
-    const res = await fetch(`/api/rezervasyonlar/kullanici/${aktifKullanici.id}`);
+    const res = await yetkiliFetch(`/api/rezervasyonlar/kullanici/${aktifKullanici.id}`);
     const data = await res.json();
     const liste = Array.isArray(data) ? data : (data.rezervasyonlar || []);
 
@@ -197,7 +238,7 @@ const rezervasyonlariGetir = async () => {
 document.getElementById('rez-yenile-btn').addEventListener('click', rezervasyonlariGetir);
 
 window.rezervasyonIptal = async (rezervasyon_id) => {
-    const res = await fetch(`/api/rezervasyonlar/${rezervasyon_id}/iptal`, {
+    const res = await yetkiliFetch(`/api/rezervasyonlar/${rezervasyon_id}/iptal`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ kullanici_id: aktifKullanici.id })
@@ -212,7 +253,7 @@ window.rezervasyonIptal = async (rezervasyon_id) => {
 
 // 5. BAKİYE
 const bakiyeGetir = async () => {
-    const res = await fetch(`/api/bakiye/kullanici/${aktifKullanici.id}`);
+    const res = await yetkiliFetch(`/api/bakiye/kullanici/${aktifKullanici.id}`);
     const data = await res.json();
     if (!res.ok) return;
 
@@ -229,7 +270,7 @@ const bakiyeGetir = async () => {
 document.getElementById('bakiye-yukle-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const tutar = Number(document.getElementById('yukle-tutar').value);
-    const res = await fetch('/api/bakiye/yukle', {
+    const res = await yetkiliFetch('/api/bakiye/yukle', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ kullanici_id: aktifKullanici.id, tutar })
@@ -250,7 +291,7 @@ document.getElementById('degerlendirme-form').addEventListener('submit', async (
     const puan = Number(document.getElementById('deg-puan').value);
     const yorum = document.getElementById('deg-yorum').value;
 
-    const res = await fetch('/api/degerlendirmeler', {
+    const res = await yetkiliFetch('/api/degerlendirmeler', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ kullanici_id: aktifKullanici.id, menu_id, puan, yorum })
@@ -281,7 +322,7 @@ document.getElementById('deg-getir-btn').addEventListener('click', async () => {
 
 // 7. YÖNETİCİ PANELİ
 const yoneticiIstatistikGetir = async () => {
-    const res = await fetch(`/api/yonetici/istatistikler?yonetici_id=${aktifKullanici.id}`);
+    const res = await yetkiliFetch(`/api/yonetici/istatistikler?yonetici_id=${aktifKullanici.id}`);
     const data = await res.json();
     const alan = document.getElementById('yon-istatistik-sonuc');
     if (!res.ok) return alan.innerHTML = `<div class="oge-kart">${data.hata}</div>`;
@@ -314,7 +355,7 @@ document.getElementById('yonetici-menu-form').addEventListener('submit', async (
     const url = menuId ? `/api/yonetici/menuler/${menuId}` : '/api/yonetici/menuler';
     const method = menuId ? 'PUT' : 'POST';
 
-    const res = await fetch(url, {
+    const res = await yetkiliFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)

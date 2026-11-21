@@ -1,20 +1,46 @@
-const Yonetici = require('../models/yoneticiModel');
 
-const yetkiKontrol = async (yonetici_id) => {
-    if (!yonetici_id) return false;
+const Yonetici = require('../models/yoneticiModel');
+const { redisClient } = require('../config/redis');
+
+// Yönetici kimliği artık Redis oturumundan alınıyor.
+const yetkiKontrol = async (req) => {
+    const yonetici_id = req.kullanici.kullanici_id;
+
+    if (req.kullanici.rol !== 'yonetici') {
+        return false;
+    }
+
+    // Veritabanındaki yetkiyi de doğrula.
     return await Yonetici.yoneticiMi(yonetici_id);
 };
 
 const yeniMenuOlustur = async (req, res) => {
-    const { yonetici_id, yemekhane_id, tarih, ogun_id, ogrenci_fiyati, personel_fiyati, yemek_idleri } = req.body;
+    const {
+        yemekhane_id,
+        tarih,
+        ogun_id,
+        ogrenci_fiyati,
+        personel_fiyati,
+        yemek_idleri
+    } = req.body;
 
     try {
-        if (!(await yetkiKontrol(yonetici_id))) {
-            return res.status(403).json({ hata: "Bu işlem için yönetici yetkisi gereklidir." });
+        if (!(await yetkiKontrol(req))) {
+            return res.status(403).json({
+                hata: 'Bu işlem için yönetici yetkisi gereklidir.'
+            });
         }
 
-        if (!yemekhane_id || !tarih || !ogun_id || ogrenci_fiyati == null || personel_fiyati == null) {
-            return res.status(400).json({ hata: "Yemekhane, tarih, öğün ve fiyat bilgileri zorunludur." });
+        if (
+            !yemekhane_id ||
+            !tarih ||
+            !ogun_id ||
+            ogrenci_fiyati == null ||
+            personel_fiyati == null
+        ) {
+            return res.status(400).json({
+                hata: 'Yemekhane, tarih, öğün ve fiyat bilgileri zorunludur.'
+            });
         }
 
         const menuId = await Yonetici.menuOlustur({
@@ -26,29 +52,53 @@ const yeniMenuOlustur = async (req, res) => {
             yemek_idleri
         });
 
-        res.status(201).json({
-            mesaj: "Menü başarıyla oluşturuldu.",
+        return res.status(201).json({
+            mesaj: 'Menü başarıyla oluşturuldu.',
             menu_id: menuId
         });
+
     } catch (error) {
-        console.error("Menü oluşturma hatası:", error);
-        const hataMesaji = error.sqlMessage || "Menü oluşturulurken hata oluştu.";
-        res.status(400).json({ hata: hataMesaji });
+        console.error('Menü oluşturma hatası:', error);
+
+        return res.status(400).json({
+            hata: error.sqlMessage || 'Menü oluşturulurken hata oluştu.'
+        });
     }
 };
 
 const menuGuncelle = async (req, res) => {
     const { menu_id } = req.params;
-    const { yonetici_id, yemekhane_id, tarih, ogun_id, ogrenci_fiyati, personel_fiyati, yemek_idleri } = req.body;
+
+    const {
+        yemekhane_id,
+        tarih,
+        ogun_id,
+        ogrenci_fiyati,
+        personel_fiyati,
+        yemek_idleri
+    } = req.body;
 
     try {
-        if (!(await yetkiKontrol(yonetici_id))) {
-            return res.status(403).json({ hata: "Bu işlem için yönetici yetkisi gereklidir." });
+        if (!(await yetkiKontrol(req))) {
+            return res.status(403).json({
+                hata: 'Bu işlem için yönetici yetkisi gereklidir.'
+            });
         }
 
-        if (!yemekhane_id || !tarih || !ogun_id || ogrenci_fiyati == null || personel_fiyati == null) {
-            return res.status(400).json({ hata: "Güncelleme için tüm zorunlu menü alanları gereklidir." });
+        if (
+            !yemekhane_id ||
+            !tarih ||
+            !ogun_id ||
+            ogrenci_fiyati == null ||
+            personel_fiyati == null
+        ) {
+            return res.status(400).json({
+                hata: 'Güncelleme için tüm zorunlu menü alanları gereklidir.'
+            });
         }
+
+        // Güncellemeden önce menünün eski bilgilerini al.
+        const eskiMenu = await Yonetici.menuBilgisiGetir(menu_id);
 
         const guncellendi = await Yonetici.menuDuzenle(menu_id, {
             yemekhane_id,
@@ -60,36 +110,67 @@ const menuGuncelle = async (req, res) => {
         });
 
         if (!guncellendi) {
-            return res.status(404).json({ hata: "Güncellenecek menü bulunamadı." });
+            return res.status(404).json({
+                hata: 'Güncellenecek menü bulunamadı.'
+            });
         }
 
-        res.json({
-            mesaj: "Menü başarıyla güncellendi.",
+        // Eski ve yeni Redis önbellek anahtarlarını temizle.
+        const anahtarlar = [];
+
+        if (eskiMenu) {
+            anahtarlar.push(
+                `menu:${eskiMenu.yemekhane_id}:${eskiMenu.tarih}:${eskiMenu.ogun_id}`
+            );
+        }
+
+        anahtarlar.push(
+            `menu:${yemekhane_id}:${tarih}:${ogun_id}`
+        );
+
+        const tekilAnahtarlar = [...new Set(anahtarlar)];
+
+        await redisClient.del(tekilAnahtarlar);
+
+        console.log(
+            `[REDIS] Menü güncellendi, önbellek temizlendi: ${tekilAnahtarlar.join(', ')}`
+        );
+
+        return res.json({
+            mesaj: 'Menü başarıyla güncellendi.',
             menu_id: Number(menu_id)
         });
+
     } catch (error) {
-        console.error("Menü güncelleme hatası:", error);
-        const hataMesaji = error.sqlMessage || "Menü güncellenirken hata oluştu.";
-        res.status(400).json({ hata: hataMesaji });
+        console.error('Menü güncelleme hatası:', error);
+
+        return res.status(400).json({
+            hata: error.sqlMessage || 'Menü güncellenirken hata oluştu.'
+        });
     }
 };
 
 const menuIstatistikleri = async (req, res) => {
-    const { yonetici_id } = req.query;
-
     try {
-        if (!(await yetkiKontrol(yonetici_id))) {
-            return res.status(403).json({ hata: "Bu raporu görüntülemek için yönetici yetkisi gereklidir." });
+        if (!(await yetkiKontrol(req))) {
+            return res.status(403).json({
+                hata: 'Bu raporu görüntülemek için yönetici yetkisi gereklidir.'
+            });
         }
 
         const rapor = await Yonetici.menuIstatistikleriGetir();
-        res.json({
+
+        return res.json({
             toplam_kayit: rapor.length,
             menuler: rapor
         });
+
     } catch (error) {
-        console.error("Menü istatistik hatası:", error);
-        res.status(500).json({ hata: "İstatistikler getirilirken sunucu hatası oluştu." });
+        console.error('Menü istatistik hatası:', error);
+
+        return res.status(500).json({
+            hata: 'İstatistikler getirilirken sunucu hatası oluştu.'
+        });
     }
 };
 

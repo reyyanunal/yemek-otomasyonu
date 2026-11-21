@@ -1,3 +1,4 @@
+const { redisBaglan } = require('./config/redis');
 const express = require('express');
 const app = express();
 const port = 8000;
@@ -31,6 +32,17 @@ app.use('/api/degerlendirmeler', degerlendirmeRoutes);
 const yoneticiRoutes = require('./routes/yoneticiRoutes');
 app.use('/api/yonetici', yoneticiRoutes);
 
-app.listen(port, () => {
-  console.log(`Uygulama ${port} portunda basladi`);
-});
+const sunucuyuBaslat = async () => {
+    try {
+        await redisBaglan();
+
+        app.listen(port, () => {
+            console.log(`Uygulama ${port} portunda basladi`);
+        });
+    } catch (error) {
+        console.error('Uygulama baslatilamadi:', error);
+        process.exit(1);
+    }
+};
+
+sunucuyuBaslat();

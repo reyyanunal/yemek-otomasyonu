@@ -1,11 +1,14 @@
+
 const express = require('express');
 const router = express.Router();
-const bakiyeController = require('../controllers/bakiyeController');
 
-// GET /api/bakiye/kullanici/1
+const bakiyeController = require('../controllers/bakiyeController');
+const { oturumKontrol } = require('../middleware/oturumKontrol');
+
+router.use(oturumKontrol);
+
 router.get('/kullanici/:kullanici_id', bakiyeController.bakiyeOzet);
 
-// POST /api/bakiye/yukle
 router.post('/yukle', bakiyeController.bakiyeYuklemeIslemi);
 
 module.exports = router;

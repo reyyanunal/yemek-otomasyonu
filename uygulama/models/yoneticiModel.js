@@ -37,6 +37,20 @@ const menuOlustur = async ({ yemekhane_id, tarih, ogun_id, ogrenci_fiyati, perso
     }
 };
 
+const menuBilgisiGetir = async (menu_id) => {
+    const [rows] = await dbWrite.execute(
+        `SELECT id, yemekhane_id,
+                DATE_FORMAT(tarih, '%Y-%m-%d') AS tarih,
+                ogun_id
+         FROM menuler
+         WHERE id = ?`,
+        [menu_id]
+    );
+
+    return rows[0] || null;
+};
+
+
 const menuDuzenle = async (menu_id, { yemekhane_id, tarih, ogun_id, ogrenci_fiyati, personel_fiyati, yemek_idleri }) => {
     const conn = await dbWrite.getConnection();
     try {
@@ -103,5 +117,6 @@ module.exports = {
     yoneticiMi,
     menuOlustur,
     menuDuzenle,
+    menuBilgisiGetir,
     menuIstatistikleriGetir
 };
