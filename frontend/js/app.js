@@ -106,7 +106,11 @@ const gunlukMenuGetir = async () => {
             ${yemekler.map((y) => `
                 <div>• <strong>${y.yemek_adi || y.ad || ''}</strong> (${y.kalori || 0} kcal)
                 ${y.vejetaryen ? ' [Vejetaryen]' : ''}
-                ${y.alerjenler ? ` - Alerjen: ${y.alerjenler}` : ''}</div>
+                
+${Array.isArray(y.alerjenler) && y.alerjenler.length > 0
+            ? ` - Alerjen: ${y.alerjenler.join(', ')}`
+            : ''}
+
             `).join('')}
         </div>
     `;
@@ -121,6 +125,16 @@ const haftalikMenuGetir = async () => {
     const data = await res.json();
     const liste = Array.isArray(data) ? data : (data.menuler || []);
 
+    const rezervasyonRes = await fetch(`/api/rezervasyonlar/kullanici/${aktifKullanici.id}`);
+    const rezervasyonlar = await rezervasyonRes.json();
+
+    const rezerveMenuler = new Set(
+        rezervasyonlar
+            .filter(r => r.durum === 'aktif')
+            .map(r => Number(r.menu_id))
+    );
+
+
     if (liste.length === 0) {
         alan.innerHTML = `<div class="oge-kart">${data.hata || 'Haftalık menü bulunamadı.'}</div>`;
         return;
@@ -128,8 +142,9 @@ const haftalikMenuGetir = async () => {
 
     alan.innerHTML = liste.map((m) => {
         const fiyat = m.fiyat ?? (aktifKullanici.rol === 'ogrenci' ? m.ogrenci_fiyati : m.personel_fiyati);
-        const sonSaatGecti = m.rezervasyon_son ? new Date(m.rezervasyon_son) < new Date() : false;
-        const pasif = m.pasif || sonSaatGecti || Number(m.bos_yer) <= 0;
+
+        const zatenRezerve = rezerveMenuler.has(Number(m.menu_id));
+        const pasif = m.rezervasyon_acik !== true || zatenRezerve;
         return `
             <div class="oge-kart">
                 <div class="oge-baslik">
@@ -139,7 +154,7 @@ const haftalikMenuGetir = async () => {
                 <div>Tarih: ${String(m.tarih || '').slice(0, 10)} | Boş Yer: ${m.bos_yer ?? '-'}</div>
                 <button class="btn-birincil btn-kucuk" style="margin-top:8px" ${pasif ? 'disabled' : ''}
                     onclick="rezervasyonYap(${m.menu_id || m.id})">
-                    ${pasif ? 'Süre Doldu / Dolu' : 'Rezervasyon Yap'}
+                    ${zatenRezerve ? 'Zaten Rezerve Edildi' : pasif ? (m.pasif_nedeni || 'Rezervasyon Kapalı') : 'Rezervasyon Yap'}
                 </button>
             </div>
         `;

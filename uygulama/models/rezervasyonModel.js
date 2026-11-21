@@ -2,7 +2,7 @@ const { dbRead, dbWrite } = require('../config/db');
 
 const kullaniciRezervasyonlariniGetir = async (kullanici_id) => {
     const query = `
-        SELECT r.id AS rezervasyon_id, r.durum, r.ucret, r.olusturma, 
+        SELECT r.id AS rezervasyon_id,r.menu_id, r.durum, r.ucret, r.olusturma, 
                m.tarih, m.ogun, m.yemekhane, m.rezervasyon_son 
         FROM rezervasyonlar r
         JOIN v_menu_doluluk m ON r.menu_id = m.menu_id

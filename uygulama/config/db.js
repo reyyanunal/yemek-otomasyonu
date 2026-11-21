@@ -4,7 +4,7 @@ const mysql = require('mysql2/promise');
 const dbWrite = mysql.createPool({
     host: process.env.DB_YAZMA_HOST || 'mysql-primary',
     user: process.env.DB_KULLANICI || 'yemekhane_app',
-    password: process.env.DB_SIFRE || 'Uyg_2026',
+    password: process.env.DB_SIFRE,
     database: process.env.DB_ADI || 'yemekhane',
     port: process.env.DB_PORT || 3306,
     waitForConnections: true,
@@ -16,7 +16,7 @@ const dbWrite = mysql.createPool({
 const dbRead = mysql.createPool({
     host: process.env.DB_OKUMA_HOST || 'mysql-replica',
     user: process.env.DB_KULLANICI || 'yemekhane_app',
-    password: process.env.DB_SIFRE || 'Uyg_2026',
+    password: process.env.DB_SIFRE,
     database: process.env.DB_ADI || 'yemekhane',
     port: process.env.DB_PORT || 3306,
     waitForConnections: true,

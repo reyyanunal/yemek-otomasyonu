@@ -14,7 +14,13 @@ const rezervasyonlarim = async (req, res) => {
 
             return {
                 rezervasyon_id: satir.rezervasyon_id,
-                tarih: satir.tarih.toISOString().split('T')[0],
+                menu_id: satir.menu_id,
+                tarih: new Intl.DateTimeFormat('en-CA', {
+                    timeZone: 'Europe/Istanbul',
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit'
+                }).format(satir.tarih),
                 yemekhane: satir.yemekhane,
                 ogun: satir.ogun,
                 durum: satir.durum,
@@ -40,7 +46,7 @@ const yeniRezervasyon = async (req, res) => {
 
     try {
         const sonuc = await Rezervasyon.rezervasyonYap(kullanici_id, menu_id);
-        
+
         res.status(201).json({
             mesaj: "Rezervasyon başarıyla oluşturuldu.",
             detay: sonuc
@@ -73,4 +79,4 @@ const rezervasyonIptal = async (req, res) => {
     }
 };
 
-module.exports = { rezervasyonlarim, yeniRezervasyon,rezervasyonIptal};
+module.exports = { rezervasyonlarim, yeniRezervasyon, rezervasyonIptal };

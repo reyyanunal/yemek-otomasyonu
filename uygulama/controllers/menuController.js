@@ -22,16 +22,22 @@ const gunlukMenuDetay = async (req, res) => {
 
         satirlar.forEach(satir => {
             toplamKalori += satir.kalori || 0;
-            
+
+
             yemekler.push({
                 ad: satir.yemek,
                 kategori: satir.kategori,
                 kalori: satir.kalori,
-                vejetaryen: satir.vejetaryen === 1
+                vejetaryen: satir.vejetaryen === 1,
+                alerjenler: satir.alerjenler
+                    ? satir.alerjenler.split(',').map(a => a.trim())
+                    : [],
+                alerjen_idler: satir.alerjen_idler
             });
 
+
             if (satir.vejetaryen === 0) hepsiVejetaryen = false;
-            
+
             if (satir.alerjenler) {
                 satir.alerjenler.split(',').forEach(a => alerjenKumesi.add(a.trim()));
             }
@@ -69,8 +75,8 @@ const haftalikMenu = async (req, res) => {
 
         const haftalikListe = satirlar.map(satir => {
             // İŞ KURALI 1: Rol bazlı fiyat belirleme (Arayüz düşünmez, API karar verir)
-            const gecerliFiyat = (rol === 'personel' || rol === 'yonetici') 
-                ? satir.personel_fiyati 
+            const gecerliFiyat = (rol === 'personel' || rol === 'yonetici')
+                ? satir.personel_fiyati
                 : satir.ogrenci_fiyati;
 
             // İŞ KURALI 2: Son saat geçtiyse veya boş yer yoksa rezervasyon kapalıdır
@@ -84,7 +90,12 @@ const haftalikMenu = async (req, res) => {
 
             return {
                 menu_id: satir.menu_id,
-                tarih: satir.tarih.toISOString().split('T')[0], // Sadece YYYY-MM-DD
+                tarih: new Intl.DateTimeFormat('en-CA', {
+                    timeZone: 'Europe/Istanbul',
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit'
+                }).format(satir.tarih),
                 yemekhane: satir.yemekhane,
                 ogun: satir.ogun,
                 bos_yer: satir.bos_yer,
