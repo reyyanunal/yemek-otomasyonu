@@ -8,23 +8,30 @@
 
 :root {
   /* Renkler */
-  --zemin:       #EEF2F0;   /* porselen, sayfa zemini       */
-  --yuzey:       #FFFFFF;   /* içerik alanları              */
-  --metin:       #1F2A2E;   /* ana metin                    */
-  --metin-soluk: #5A686D;   /* ikincil metin, açıklamalar   */
-  --cizgi:       #C9D3D0;   /* kenarlıklar                  */
-  --ana:         #1B6B5A;   /* karo yeşili: ana eylem       */
-  --ana-koyu:    #12503F;
-  --vurgu:       #F2B134;   /* safran: fiyat, boş yer       */
-  --hata:        #B3261E;
-  --hata-zemin:  #FCE8E6;
-  --basari:      #2E6B30;
-  --basari-zemin:#E6F2E6;
+  --zemin: #EEF2F0;
+  /* porselen, sayfa zemini       */
+  --yuzey: #FFFFFF;
+  /* içerik alanları              */
+  --metin: #1F2A2E;
+  /* ana metin                    */
+  --metin-soluk: #5A686D;
+  /* ikincil metin, açıklamalar   */
+  --cizgi: #C9D3D0;
+  /* kenarlıklar                  */
+  --ana: #1B6B5A;
+  /* karo yeşili: ana eylem       */
+  --ana-koyu: #12503F;
+  --vurgu: #F2B134;
+  /* safran: fiyat, boş yer       */
+  --hata: #B3261E;
+  --hata-zemin: #FCE8E6;
+  --basari: #2E6B30;
+  --basari-zemin: #E6F2E6;
 
   /* Yazı */
   --yazi: "Segoe UI", system-ui, -apple-system, Roboto, "Noto Sans", sans-serif;
   --boyut-kucuk: 0.875rem;
-  --boyut:       1rem;
+  --boyut: 1rem;
   --boyut-buyuk: 1.25rem;
   --boyut-baslik: 1.75rem;
 
@@ -33,9 +40,15 @@
   --kose: 6px;
 }
 
-*, *::before, *::after { box-sizing: border-box; }
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
 
-html { -webkit-text-size-adjust: 100%; }
+html {
+  -webkit-text-size-adjust: 100%;
+}
 
 body {
   margin: 0;
@@ -46,15 +59,40 @@ body {
   background: var(--zemin);
 }
 
-img, svg { max-width: 100%; height: auto; display: block; }
+img,
+svg {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
 
-h1, h2, h3 { line-height: 1.2; margin: 0 0 0.5em; }
-h1 { font-size: var(--boyut-baslik); }
-h2 { font-size: var(--boyut-buyuk); }
-p  { margin: 0 0 1em; max-width: 70ch; }
+h1,
+h2,
+h3 {
+  line-height: 1.2;
+  margin: 0 0 0.5em;
+}
 
-a { color: var(--ana); }
-a:hover { color: var(--ana-koyu); }
+h1 {
+  font-size: var(--boyut-baslik);
+}
+
+h2 {
+  font-size: var(--boyut-buyuk);
+}
+
+p {
+  margin: 0 0 1em;
+  max-width: 70ch;
+}
+
+a {
+  color: var(--ana);
+}
+
+a:hover {
+  color: var(--ana-koyu);
+}
 
 /* Sayfa genişliği: telefonda kenarlara 1rem pay, geniş ekranda ortalı */
 .kapsayici {
@@ -65,11 +103,22 @@ a:hover { color: var(--ana-koyu); }
 }
 
 /* ---------- Form öğeleri ---------- */
-label { display: block; font-weight: 600; margin-bottom: 0.25rem; }
+label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
 
-input, select, textarea, button { font: inherit; }
+input,
+select,
+textarea,
+button {
+  font: inherit;
+}
 
-input, select, textarea {
+input,
+select,
+textarea {
   width: 100%;
   padding: 0.6rem 0.75rem;
   border: 1px solid var(--cizgi);
@@ -91,7 +140,11 @@ input, select, textarea {
   text-decoration: none;
   cursor: pointer;
 }
-.dugme:hover { background: var(--ana-koyu); color: #fff; }
+
+.dugme:hover {
+  background: var(--ana-koyu);
+  color: #fff;
+}
 
 /* Örn. rezervasyon son saati geçtiğinde */
 .dugme:disabled,
@@ -101,7 +154,10 @@ input, select, textarea {
   cursor: not-allowed;
 }
 
-:focus-visible { outline: 3px solid var(--vurgu); outline-offset: 2px; }
+:focus-visible {
+  outline: 3px solid var(--vurgu);
+  outline-offset: 2px;
+}
 
 /* ---------- Bildirim kutusu ----------
    Stored procedure'lerden dönen Türkçe hata mesajları buraya yazılabilir:
@@ -111,15 +167,29 @@ input, select, textarea {
   border-radius: var(--kose);
   border-left: 4px solid currentColor;
 }
-.bildirim-hata   { color: var(--hata);   background: var(--hata-zemin); }
-.bildirim-basari { color: var(--basari); background: var(--basari-zemin); }
+
+.bildirim-hata {
+  color: var(--hata);
+  background: var(--hata-zemin);
+}
+
+.bildirim-basari {
+  color: var(--basari);
+  background: var(--basari-zemin);
+}
 
 /* Geniş tabloların sayfayı yana kaydırmaması için sarmalayıcı */
-.tablo-kaydir { overflow-x: auto; }
+.tablo-kaydir {
+  overflow-x: auto;
+}
 
 @media (prefers-reduced-motion: reduce) {
-  * { animation: none !important; transition: none !important; }
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
 }
+
 /* ---------- Uygulama Düzeni ve Bileşenler ---------- */
 .ust-bar {
   background: var(--ana);
@@ -132,7 +202,10 @@ input, select, textarea {
   gap: 8px;
 }
 
-.logo { font-weight: 700; font-size: 1.1rem; }
+.logo {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
 
 .kullanici-bilgi {
   display: flex;
@@ -217,12 +290,37 @@ button {
   font-weight: 600;
 }
 
-.btn-birincil { background: var(--ana); color: #fff; }
-.btn-birincil:hover { background: var(--ana-koyu); }
-.btn-ikincil { background: var(--zemin); color: var(--metin); border: 1px solid var(--cizgi); }
-.btn-tehlike { background: var(--hata); color: #fff; }
-.btn-kucuk { min-height: 36px; padding: 5px 10px; font-size: var(--boyut-kucuk); }
-button:disabled { background: var(--cizgi); color: var(--metin-soluk); cursor: not-allowed; }
+.btn-birincil {
+  background: var(--ana);
+  color: #fff;
+}
+
+.btn-birincil:hover {
+  background: var(--ana-koyu);
+}
+
+.btn-ikincil {
+  background: var(--zemin);
+  color: var(--metin);
+  border: 1px solid var(--cizgi);
+}
+
+.btn-tehlike {
+  background: var(--hata);
+  color: #fff;
+}
+
+.btn-kucuk {
+  min-height: 36px;
+  padding: 5px 10px;
+  font-size: var(--boyut-kucuk);
+}
+
+button:disabled {
+  background: var(--cizgi);
+  color: var(--metin-soluk);
+  cursor: not-allowed;
+}
 
 .liste-alani {
   display: flex;
@@ -247,16 +345,72 @@ button:disabled { background: var(--cizgi); color: var(--metin-soluk); cursor: n
   margin-bottom: 6px;
 }
 
-.bildirim { margin-bottom: 12px; }
-.bildirim.basari { color: var(--basari); background: var(--basari-zemin); }
-.bildirim.hata { color: var(--hata); background: var(--hata-zemin); }
+.bildirim {
+  margin-bottom: 12px;
+}
 
-.bakiye-ozet { font-size: var(--boyut-buyuk); margin: 10px 0; }
-hr { border: none; border-top: 1px solid var(--cizgi); margin: 16px 0; }
-.gizli { display: none !important; }
+.bildirim.basari {
+  color: var(--basari);
+  background: var(--basari-zemin);
+}
+
+.bildirim.hata {
+  color: var(--hata);
+  background: var(--hata-zemin);
+}
+
+.bakiye-ozet {
+  font-size: var(--boyut-buyuk);
+  margin: 10px 0;
+}
+
+hr {
+  border: none;
+  border-top: 1px solid var(--cizgi);
+  margin: 16px 0;
+}
+
+.gizli {
+  display: none !important;
+}
 
 @media (max-width: 480px) {
-  .ust-bar { flex-direction: column; align-items: flex-start; }
-  .sekme-btn { flex: 1 1 45%; text-align: center; }
-  .kart { padding: 12px; }
+  .ust-bar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .sekme-btn {
+    flex: 1 1 45%;
+    text-align: center;
+  }
+
+  .kart {
+    padding: 12px;
+  }
+}
+
+/* Aşama 4 - Alerjen profili */
+.alerjen-secim-alani {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin: 18px 0;
+}
+
+.alerjen-secenek {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.alerjen-secenek input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  flex-shrink: 0;
 }

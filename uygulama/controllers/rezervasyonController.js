@@ -32,6 +32,7 @@ const rezervasyonlarim = async (req, res) => {
                 ogun: satir.ogun,
                 durum: satir.durum,
                 ucret: satir.ucret,
+                porsiyon: satir.porsiyon,
                 iptal_edilebilir: iptalEdilebilir,
                 pasif_nedeni: (!iptalEdilebilir && satir.durum === 'aktif')
                     ? 'Süre doldu'
@@ -50,7 +51,7 @@ const rezervasyonlarim = async (req, res) => {
 
 const yeniRezervasyon = async (req, res) => {
     const kullanici_id = req.kullanici.kullanici_id;
-    const { menu_id } = req.body;
+    const { menu_id, porsiyon = 'tam' } = req.body;
 
     if (!menu_id) {
         return res.status(400).json({
@@ -59,7 +60,7 @@ const yeniRezervasyon = async (req, res) => {
     }
 
     try {
-        const sonuc = await Rezervasyon.rezervasyonYap(kullanici_id, menu_id);
+        const sonuc = await Rezervasyon.rezervasyonYap(kullanici_id, menu_id, porsiyon);
 
         return res.status(201).json({
             mesaj: 'Rezervasyon başarıyla oluşturuldu.',

@@ -31,6 +31,8 @@ app.use('/api/degerlendirmeler', degerlendirmeRoutes);
 
 const yoneticiRoutes = require('./routes/yoneticiRoutes');
 app.use('/api/yonetici', yoneticiRoutes);
+const alerjenRoutes = require('./routes/alerjenRoutes');
+app.use('/api/alerjenler', alerjenRoutes);
 
 const sunucuyuBaslat = async () => {
     try {

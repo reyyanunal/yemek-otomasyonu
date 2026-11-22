@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="tr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Üniversite Yemekhane Otomasyonu</title>
     <link rel="stylesheet" href="/css/temel.css">
 </head>
+
 <body>
     <header class="ust-bar">
         <div class="logo">Yemekhane Otomasyonu</div>
@@ -40,6 +42,7 @@
                 <button class="sekme-btn" data-sekme="haftalik">Haftalık & Rezervasyon</button>
                 <button class="sekme-btn" data-sekme="rezervasyonlar">Rezervasyonlarım</button>
                 <button class="sekme-btn" data-sekme="bakiye">Bakiye</button>
+                <button class="sekme-btn" data-sekme="profil">Alerjen Profilim</button>
                 <button class="sekme-btn" data-sekme="degerlendirme">Değerlendirme</button>
                 <button class="sekme-btn gizli" id="yonetici-sekme-btn" data-sekme="yonetici">Yönetici</button>
             </nav>
@@ -77,6 +80,19 @@
                 <div id="rez-sonuc" class="liste-alani"></div>
             </section>
 
+            <!-- AŞAMA 4: ALERJEN PROFİLİ -->
+            <section id="sekme-profil" class="sekme-icerik kart gizli">
+                <h2>Alerjen Profilim</h2>
+                <p>Uyarı almak istediğiniz alerjenleri seçin.</p>
+
+                <div id="profil-alerjenler" class="alerjen-secim-alani"></div>
+
+                <button id="profil-kaydet-btn" class="btn-birincil">
+                    Tercihleri Kaydet
+                </button>
+            </section>
+
+
             <!-- 5. BAKİYE -->
             <section id="sekme-bakiye" class="sekme-icerik kart gizli">
                 <h2>Bakiye İşlemleri</h2>
@@ -84,7 +100,8 @@
                     Güncel Bakiye: <strong id="bakiye-tutar">0.00 TL</strong>
                 </div>
                 <form id="bakiye-yukle-form" class="filtre-satir">
-                    <input type="number" id="yukle-tutar" min="10" max="1000" step="1" placeholder="Tutar (10-1000 TL)" required>
+                    <input type="number" id="yukle-tutar" min="10" max="1000" step="1" placeholder="Tutar (10-1000 TL)"
+                        required>
                     <button type="submit" class="btn-birincil">Bakiye Yükle</button>
                 </form>
                 <h3>Hareket Geçmişi</h3>
@@ -156,4 +173,5 @@
 
     <script src="/js/app.js"></script>
 </body>
+
 </html>

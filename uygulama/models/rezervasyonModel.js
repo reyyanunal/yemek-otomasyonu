@@ -2,7 +2,7 @@ const { dbRead, dbWrite } = require('../config/db');
 
 const kullaniciRezervasyonlariniGetir = async (kullanici_id) => {
     const query = `
-        SELECT r.id AS rezervasyon_id,r.menu_id, r.durum, r.ucret, r.olusturma, 
+        SELECT r.id AS rezervasyon_id,r.menu_id, r.durum, r.ucret, r.porsiyon, r.olusturma, 
                m.tarih, m.ogun, m.yemekhane, m.rezervasyon_son 
         FROM rezervasyonlar r
         JOIN v_menu_doluluk m ON r.menu_id = m.menu_id
@@ -13,16 +13,23 @@ const kullaniciRezervasyonlariniGetir = async (kullanici_id) => {
     return rows;
 };
 
-const rezervasyonYap = async (kullanici_id, menu_id) => {
-    // KURAL: Yazma işlemi olduğu için dbWrite (Primary) kullanıyoruz!
-    const query = `CALL sp_rezervasyon_yap(?, ?)`;
-    const [rows] = await dbWrite.execute(query, [kullanici_id, menu_id]);
+
+const rezervasyonYap = async (kullanici_id, menu_id, porsiyon = 'tam') => {
+    const query = `CALL sp_rezervasyon_yap(?, ?, ?)`;
+
+    const [rows] = await dbWrite.execute(query, [
+        kullanici_id,
+        menu_id,
+        porsiyon
+    ]);
 
     if (rows && rows[0] && rows[0].length > 0) {
-        return rows[0][0]; // Stored Procedure'den dönen: rezervasyon_id, ucret, bakiye
+        return rows[0][0];
     }
+
     return null;
 };
+
 
 const rezervasyonIptalEt = async (kullanici_id, rezervasyon_id) => {
     // Yazma/iade işlemi olduğu için dbWrite (Primary) kullanıyoruz

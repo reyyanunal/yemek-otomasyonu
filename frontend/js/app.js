@@ -64,15 +64,15 @@ document.getElementById('giris-form').addEventListener('submit', async (e) => {
     const data = await res.json();
     if (!res.ok) return bildirimGoster(data.hata || 'Giriş başarısız.', 'hata');
 
-    
-aktifKullanici = data.kullanici;
-oturumToken = data.token;
 
-localStorage.setItem('kullanici', JSON.stringify(aktifKullanici));
-localStorage.setItem('oturumToken', oturumToken);
+    aktifKullanici = data.kullanici;
+    oturumToken = data.token;
 
-bildirimGoster('Giriş başarılı.');
-arayuzuHazirla();
+    localStorage.setItem('kullanici', JSON.stringify(aktifKullanici));
+    localStorage.setItem('oturumToken', oturumToken);
+
+    bildirimGoster('Giriş başarılı.');
+    arayuzuHazirla();
 
 });
 
@@ -116,6 +116,7 @@ document.querySelectorAll('.sekme-btn').forEach((btn) => {
         if (hedef === 'rezervasyonlar') rezervasyonlariGetir();
         if (hedef === 'bakiye') bakiyeGetir();
         if (hedef === 'yonetici') yoneticiIstatistikGetir();
+        if (hedef === 'profil') profilAlerjenleriniGetir();
     });
 });
 
@@ -134,6 +135,27 @@ const gunlukMenuGetir = async () => {
         return;
     }
 
+    // Kullanıcının kayıtlı alerjen tercihlerini getir.
+    let kullaniciAlerjenleri = new Set();
+
+    try {
+        const tercihRes = await yetkiliFetch('/api/alerjenler/tercihlerim');
+
+        if (!tercihRes.ok) {
+            throw new Error('Alerjen tercihleri alınamadı.');
+        }
+
+        const tercihData = await tercihRes.json();
+
+        kullaniciAlerjenleri = new Set(
+            (tercihData.tercihler || []).map(a => Number(a.id))
+        );
+    } catch (error) {
+        console.error(error);
+        bildirimGoster('Alerjen uyarıları yüklenemedi.', 'hata');
+    }
+
+
     const yemekler = data.yemekler || (Array.isArray(data) ? data : []);
     if (yemekler.length === 0) {
         alan.innerHTML = `<div class="oge-kart">Bu seçim için menü kaydı yok.</div>`;
@@ -144,15 +166,40 @@ const gunlukMenuGetir = async () => {
     alan.innerHTML = `
         <div class="oge-kart">
             <div class="oge-baslik"><span>Toplam Kalori</span><span>${toplamKalori} kcal</span></div>
-            ${yemekler.map((y) => `
-                <div>• <strong>${y.yemek_adi || y.ad || ''}</strong> (${y.kalori || 0} kcal)
-                ${y.vejetaryen ? ' [Vejetaryen]' : ''}
-                
-${Array.isArray(y.alerjenler) && y.alerjenler.length > 0
-            ? ` - Alerjen: ${y.alerjenler.join(', ')}`
-            : ''}
+            
+${yemekler.map((y) => {
+        const yemekAlerjenleri = String(y.alerjen_idler || '')
+            .split(',')
+            .map(id => Number(id.trim()))
+            .filter(id => Number.isInteger(id) && id > 0);
 
-            `).join('')}
+        const eslesenler = yemekAlerjenleri.filter(
+            id => kullaniciAlerjenleri.has(id)
+        );
+
+        const eslesenAdlar = (y.alerjenler || []).filter(
+            (_, index) => eslesenler.includes(yemekAlerjenleri[index])
+        );
+
+        return `
+        <div style="margin:10px 0">
+            • <strong>${y.yemek_adi || y.ad || ''}</strong>
+            (${y.kalori || 0} kcal)
+            ${y.vejetaryen ? ' [Vejetaryen]' : ''}
+
+            ${Array.isArray(y.alerjenler) && y.alerjenler.length > 0
+                ? `<div>Alerjenler: ${y.alerjenler.join(', ')}</div>`
+                : ''}
+
+            ${eslesenler.length > 0
+                ? `<div class="alerjen-uyari">
+                    ⚠️ ALERJEN UYARISI: ${eslesenAdlar.join(', ')}
+                   </div>`
+                : ''}
+        </div>
+    `;
+    }).join('')}
+
         </div>
     `;
 };
@@ -182,17 +229,40 @@ const haftalikMenuGetir = async () => {
     }
 
     alan.innerHTML = liste.map((m) => {
+
         const fiyat = m.fiyat ?? (aktifKullanici.rol === 'ogrenci' ? m.ogrenci_fiyati : m.personel_fiyati);
 
-        const zatenRezerve = rezerveMenuler.has(Number(m.menu_id));
+        const menuId = m.menu_id || m.id;
+        const zatenRezerve = rezerveMenuler.has(Number(menuId));
         const pasif = m.rezervasyon_acik !== true || zatenRezerve;
+
+        // Kahvaltıda yarım porsiyon sunulmaz.
+        const kahvalti = Number(m.ogun_id) === 1 ||
+            String(m.ogun || '').toLocaleLowerCase('tr-TR').includes('kahvaltı');
+
+        const yarimFiyat = (Number(fiyat) * 0.60).toFixed(2);
+
+        const porsiyonSecimi = kahvalti ? `
+    <div style="margin-top:8px">Porsiyon: Tam (kahvaltıda yarım porsiyon yok)</div>
+` : `
+    <label style="display:block;margin-top:8px">
+        Porsiyon:
+        <select id="porsiyon-${menuId}" ${pasif ? 'disabled' : ''}>
+            <option value="tam">Tam – ${fiyat} TL</option>
+            <option value="yarim">Yarım – ${yarimFiyat} TL (%60)</option>
+        </select>
+    </label>
+`;
+
         return `
+
             <div class="oge-kart">
                 <div class="oge-baslik">
                     <span>#${m.menu_id || m.id} - ${m.yemekhane || ''} (${m.ogun || ''})</span>
                     <span>${fiyat ?? '-'} TL</span>
                 </div>
                 <div>Tarih: ${String(m.tarih || '').slice(0, 10)} | Boş Yer: ${m.bos_yer ?? '-'}</div>
+                ${porsiyonSecimi}
                 <button class="btn-birincil btn-kucuk" style="margin-top:8px" ${pasif ? 'disabled' : ''}
                     onclick="rezervasyonYap(${m.menu_id || m.id})">
                     ${zatenRezerve ? 'Zaten Rezerve Edildi' : pasif ? (m.pasif_nedeni || 'Rezervasyon Kapalı') : 'Rezervasyon Yap'}
@@ -203,19 +273,31 @@ const haftalikMenuGetir = async () => {
 };
 document.getElementById('haftalik-yenile-btn').addEventListener('click', haftalikMenuGetir);
 
+
 window.rezervasyonYap = async (menu_id) => {
+    const secim = document.getElementById(`porsiyon-${menu_id}`);
+    const porsiyon = secim ? secim.value : 'tam';
+
     const res = await yetkiliFetch('/api/rezervasyonlar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ kullanici_id: aktifKullanici.id, menu_id })
+        body: JSON.stringify({ menu_id, porsiyon })
     });
-    const data = await res.json();
-    if (!res.ok) return bildirimGoster(data.hata || 'Rezervasyon yapılamadı.', 'hata');
 
-    if (data.detay && data.detay.bakiye != null) bakiyeGuncelleUI(data.detay.bakiye);
+    const data = await res.json();
+
+    if (!res.ok) {
+        return bildirimGoster(data.hata || 'Rezervasyon yapılamadı.', 'hata');
+    }
+
+    if (data.detay && data.detay.bakiye != null) {
+        bakiyeGuncelleUI(data.detay.bakiye);
+    }
+
     bildirimGoster(data.mesaj || 'Rezervasyon oluşturuldu.');
     haftalikMenuGetir();
 };
+
 
 // 4. REZERVASYONLARIM VE İPTAL
 const rezervasyonlariGetir = async () => {
@@ -230,7 +312,11 @@ const rezervasyonlariGetir = async () => {
                 <span>Rez #${r.rezervasyon_id || r.id} - ${r.yemekhane || ''} (${r.ogun || ''})</span>
                 <span>Durum: ${r.durum}</span>
             </div>
-            <div>Tarih: ${String(r.tarih || '').slice(0, 10)} | Ücret: ${r.ucret || '-'} TL</div>
+            <div>
+    Tarih: ${String(r.tarih || '').slice(0, 10)}
+    | Porsiyon: ${r.porsiyon === 'yarim' ? 'Yarım' : 'Tam'}
+    | Ücret: ${r.ucret ?? '-'} TL
+</div>
             ${r.iptal_edilebilir ? `<button class="btn-tehlike btn-kucuk" style="margin-top:8px" onclick="rezervasyonIptal(${r.rezervasyon_id || r.id})">İptal Et</button>` : ''}
         </div>
     `).join('') || '<div class="oge-kart">Rezervasyonunuz bulunmuyor.</div>';
@@ -369,3 +455,69 @@ document.getElementById('yonetici-menu-form').addEventListener('submit', async (
 
 document.getElementById('gunluk-tarih').value = new Date().toISOString().slice(0, 10);
 arayuzuHazirla();
+
+const profilAlerjenleriniGetir = async () => {
+    const alan = document.getElementById('profil-alerjenler');
+    if (!alan || !aktifKullanici) return;
+
+    try {
+        const [alerjenRes, tercihRes] = await Promise.all([
+            fetch('/api/alerjenler'),
+            yetkiliFetch('/api/alerjenler/tercihlerim')
+        ]);
+
+        if (!alerjenRes.ok || !tercihRes.ok) {
+            throw new Error('Alerjen bilgileri getirilemedi.');
+        }
+
+        const alerjenData = await alerjenRes.json();
+        const tercihData = await tercihRes.json();
+
+        const secilenler = new Set(
+            tercihData.tercihler.map(a => Number(a.id))
+        );
+
+        alan.innerHTML = alerjenData.alerjenler.map(a => `
+            <label class="alerjen-secenek">
+                <input type="checkbox"
+                       name="alerjen-tercihi"
+                       value="${a.id}"
+                       ${secilenler.has(Number(a.id)) ? 'checked' : ''}>
+                ${a.ad}
+            </label>
+        `).join('');
+
+    } catch (error) {
+        console.error(error);
+        bildirimGoster('Alerjen tercihleri yüklenemedi.', 'hata');
+    }
+};
+
+document.getElementById('profil-kaydet-btn').addEventListener('click', async () => {
+    const alerjen_idleri = Array.from(
+        document.querySelectorAll(
+            '#profil-alerjenler input[name="alerjen-tercihi"]:checked'
+        )
+    ).map(input => Number(input.value));
+
+    try {
+        const res = await yetkiliFetch('/api/alerjenler/tercihlerim', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ alerjen_idleri })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            return bildirimGoster(data.hata || 'Tercihler kaydedilemedi.', 'hata');
+        }
+
+        bildirimGoster('Alerjen tercihleriniz kaydedildi.');
+        await profilAlerjenleriniGetir();
+
+    } catch (error) {
+        console.error(error);
+        bildirimGoster('Sunucu bağlantı hatası.', 'hata');
+    }
+});
